@@ -1,0 +1,57 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/lilsync.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publish",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/lilsync.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "watch",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "run",
+                "--project",
+                "${workspaceFolder}/lilsync.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "cleanup",
+            "command": "${workspaceFolder}/scripts/clean-replica.sh",
+            "type": "shell",
+            "args": [
+                "/home/ts/Projects/CSharp/test_source",
+                "/home/ts/Projects/CSharp/test_replica",
+                "/home/ts/Projects/CSharp/lilsync/Logs"
+                ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Custom task",
+            "command": "echo hello",
+            "type": "shell",
+        }
+    ]
+}
