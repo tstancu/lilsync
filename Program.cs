@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Reflection;
 
 
 namespace lilsync 
@@ -31,6 +32,12 @@ namespace lilsync
             if (!Directory.Exists(replicaFolder))
             {
                 Console.WriteLine($"Replica folder '{replicaFolder}' does not exist.");
+            }
+
+            if (args.Length >= 5 && args[4] == "--cleanup")
+            {
+                Cleanup(sourceFolder, replicaFolder, logFilePath);
+                Console.WriteLine("Cleanup completed successfully.");
             }
 
             try
@@ -138,6 +145,71 @@ namespace lilsync
                 string replicaChecksum = ChecksumCalculator.CalculateMD5Checksum(replicaFilePath);
 
                 return sourceChecksum != replicaChecksum;
+            }
+        }
+
+        static void Cleanup(string sourceFolder, string replicaFolder, string logFilePath)
+        {
+            if (Directory.Exists(replicaFolder))
+            {
+                foreach (var file in Directory.GetFiles(replicaFolder))
+                {
+                    File.Delete(file);
+                }
+                foreach (var dir in Directory.GetDirectories(replicaFolder))
+                {
+                    Directory.Delete(dir, true);
+                }
+
+                Console.WriteLine($"Contents of {replicaFolder} have been deleted.");
+            }
+            else
+            {
+                Console.WriteLine($"{replicaFolder} does not exist.");
+            }
+
+            if (Directory.Exists(logFilePath))
+            {
+                Directory.Delete(logFilePath, true);
+                Console.WriteLine($"Contents of {logFilePath} have been deleted.");
+            }
+            else
+            {
+                Console.WriteLine($"{logFilePath} does not exist.");
+            }
+
+            // Cleanup build artifacts
+
+            var assemblyLocation = Assembly.GetEntryAssembly()?.Location;
+
+            if (assemblyLocation != null)
+            {
+                var programFolder = Path.GetDirectoryName(assemblyLocation);
+
+                #pragma warning disable CS8604
+                var binFolder = Path.Combine(programFolder, "bin");
+                var objFolder = Path.Combine(programFolder, "obj");
+                #pragma warning restore CS8604
+
+                if (Directory.Exists(binFolder))
+                {
+                    Directory.Delete(binFolder, true);
+                    Console.WriteLine($"Bin folder deleted");
+                }
+                else
+                {
+                    Console.WriteLine($"{binFolder} does not exist.");
+                }
+
+                if (Directory.Exists(objFolder))
+                {
+                    Directory.Delete(objFolder, true);
+                    Console.WriteLine($"Obj folder deleted");
+                }
+                else
+                {
+                    Console.WriteLine($"{objFolder} does not exist.");
+                }
             }
         }
     }
