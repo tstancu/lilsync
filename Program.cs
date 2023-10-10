@@ -4,12 +4,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Reflection;
+using System.Timers;
 
 
 namespace lilsync 
 {
     class Program
     {
+        private static Timer? synchronizationTimer;
+        private static string sourceFolder = null!;
+        private static string replicaFolder = null!;
+        private static string logFilePath = null!;
+
+
+
         static void Main(string[] args)
         {
             if (args.Length != 4 && !args.Contains("--cleanup"))
@@ -18,9 +26,9 @@ namespace lilsync
                 return;
             }
 
-            var sourceFolder = args[0];
-            var replicaFolder = args[1];
-            var logFilePath = args[2];
+            sourceFolder = args[0];
+            replicaFolder = args[1];
+            logFilePath = args[2];
             var syncIntervalInSeconds = int.Parse(args[3]);
 
             if (!Directory.Exists(sourceFolder))
@@ -41,19 +49,17 @@ namespace lilsync
             }
             else
             {
-                try
-                {
-                    SynchronizeFolders(sourceFolder, replicaFolder, logFilePath, 2);
-                    Console.WriteLine("Synchronization completed successfully.");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An error occurred: {ex.Message}");
-                }
+                synchronizationTimer = new Timer(syncIntervalInSeconds * 1000);
+                synchronizationTimer.Elapsed += new ElapsedEventHandler(SynchronizeFolderCallback);
+                synchronizationTimer.AutoReset = true;
+                synchronizationTimer.Enabled = true;
+
+                System.Console.WriteLine($"Synchronization will occur every {syncIntervalInSeconds} seconds. Please Enter to exit.");
+                Console.ReadLine();
             }
         }
 
-        static void SynchronizeFolders(string sourceFolder, string replicaFolder, string logFilePath, int syncIntervalInSeconds)
+        static void SynchronizeFolders(string sourceFolder, string replicaFolder, string logFilePath)
         {
             string[] sourceFiles = Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories);
             string[] replicaFiles = Directory.GetFiles(replicaFolder, "*", SearchOption.AllDirectories);
@@ -142,10 +148,23 @@ namespace lilsync
 
             static bool IsFileModified(string sourceFilePath, string replicaFilePath)
             {
-                string sourceChecksum = ChecksumCalculator.CalculateMD5Checksum(sourceFilePath);
-                string replicaChecksum = ChecksumCalculator.CalculateMD5Checksum(replicaFilePath);
+                string sourceChecksum = Utils.CalculateMD5Checksum(sourceFilePath);
+                string replicaChecksum = Utils.CalculateMD5Checksum(replicaFilePath);
 
                 return sourceChecksum != replicaChecksum;
+            }
+        }
+
+        private static void SynchronizeFolderCallback(object? sender, ElapsedEventArgs e)
+        {
+            try
+            {
+                SynchronizeFolders(sourceFolder, replicaFolder, logFilePath);
+                System.Console.WriteLine("Synchronization completed successfully.");
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"An error occurred: {ex.Message}");
             }
         }
 
@@ -183,7 +202,7 @@ namespace lilsync
                     Console.WriteLine($"{logDirectory} does not exist.");
                 }
             }
-            else
+            else 
             {
                 Console.WriteLine($"{logFilePath} does not exist.");
             }
@@ -287,7 +306,7 @@ namespace lilsync
         }
     }
 
-    public static class ChecksumCalculator
+    public static class Utils
     {
         public static string CalculateMD5Checksum(string filePath)
         {
