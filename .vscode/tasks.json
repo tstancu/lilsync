@@ -13,6 +13,18 @@
             ],
             "problemMatcher": "$msCompile"
         },
+                {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/lilsync.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        },
         {
             "label": "publish",
             "command": "dotnet",

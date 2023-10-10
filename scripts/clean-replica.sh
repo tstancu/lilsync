@@ -36,12 +36,12 @@ if [ -d "$replica_directory" ]; then
 
     if [ -d "/${script_dir}/${obj_folder}" ]; then
         rm -rf "/${script_dir}/${obj_folder}"
-        echo "obj directory has been deleted from $source_directory."
+        echo "obj directory has been deleted"
     fi
 
     if [ -d "${script_dir}/${bin_folder}" ]; then
         rm -rf "${script_dir}/${bin_folder}"
-        echo "bin directory has been deleted from $source_directory."
+        echo "bin directory has been deleted."
     fi
 else
     echo "$replica_directory does not exist."

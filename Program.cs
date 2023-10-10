@@ -12,7 +12,7 @@ namespace lilsync
     {
         static void Main(string[] args)
         {
-            if (args.Length != 4)
+            if (args.Length != 4 && !args.Contains("--cleanup"))
             {
                 Console.WriteLine("Usage: lilSync <sourceFolder> <replicaFolder> <logFilePath> <syncIntervalInSeconds>");
                 return;
@@ -34,22 +34,23 @@ namespace lilsync
                 Console.WriteLine($"Replica folder '{replicaFolder}' does not exist.");
             }
 
-            if (args.Length >= 5 && args[4] == "--cleanup")
+            if (args.Contains("--cleanup"))
             {
                 Cleanup(sourceFolder, replicaFolder, logFilePath);
                 Console.WriteLine("Cleanup completed successfully.");
             }
-
-            try
+            else
             {
-                SynchronizeFolders(sourceFolder, replicaFolder, logFilePath, 2);
-                Console.WriteLine("Synchronization completed successfully.");
+                try
+                {
+                    SynchronizeFolders(sourceFolder, replicaFolder, logFilePath, 2);
+                    Console.WriteLine("Synchronization completed successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An error occurred: {ex.Message}");
+                }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"An error occurred: {ex.Message}");
-            }
-
         }
 
         static void SynchronizeFolders(string sourceFolder, string replicaFolder, string logFilePath, int syncIntervalInSeconds)
@@ -168,10 +169,19 @@ namespace lilsync
                 Console.WriteLine($"{replicaFolder} does not exist.");
             }
 
-            if (Directory.Exists(logFilePath))
+            if (File.Exists(logFilePath))
             {
-                Directory.Delete(logFilePath, true);
-                Console.WriteLine($"Contents of {logFilePath} have been deleted.");
+                string logDirectory = Path.GetDirectoryName(logFilePath)!;
+
+                if (Directory.Exists(logDirectory))
+                {
+                    Directory.Delete(logDirectory, true);
+                    Console.WriteLine($"Contents of {logDirectory} have been deleted.");
+                }
+                else
+                {
+                    Console.WriteLine($"{logDirectory} does not exist.");
+                }
             }
             else
             {
@@ -180,15 +190,15 @@ namespace lilsync
 
             // Cleanup build artifacts
 
-            var assemblyLocation = Assembly.GetEntryAssembly()?.Location;
+            var assemblyLocation = Assembly.GetExecutingAssembly()?.Location;
 
             if (assemblyLocation != null)
             {
                 var programFolder = Path.GetDirectoryName(assemblyLocation);
 
                 #pragma warning disable CS8604
-                var binFolder = Path.Combine(programFolder, "bin");
-                var objFolder = Path.Combine(programFolder, "obj");
+                var binFolder = Path.Combine(programFolder, "../../../bin");
+                var objFolder = Path.Combine(programFolder, "../../../obj");
                 #pragma warning restore CS8604
 
                 if (Directory.Exists(binFolder))
