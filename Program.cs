@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 
 
 namespace lilsync 
@@ -63,21 +64,13 @@ namespace lilsync
                 logger.Log($"Checking: {relativePath}");
 
 
-                // replicaDirectory = Path.GetDirectoryName(replicaFile)!;
-
-                // if (!Directory.Exists(replicaDirectory))
-                // {
-                //     Directory.CreateDirectory(replicaDirectory);
-                //     LogAction(logFilePath, $"Created missing directory: {replicaDirectory}");
-                // }
-
                 // Check if the file exists in the replica
 
                 if (File.Exists(replicaFile))
                 {
                     FileInfo replicaFileInfo = new FileInfo(replicaFile);
 
-                    if (sourceFileInfo.LastWriteTimeUtc > replicaFileInfo.LastWriteTimeUtc || sourceFileInfo.Length != replicaFileInfo.Length)
+                    if (IsFileModified(sourceFile, replicaFile))
                     {
                         try 
                         {
@@ -138,34 +131,15 @@ namespace lilsync
                     }
                 }
             }
+
+            static bool IsFileModified(string sourceFilePath, string replicaFilePath)
+            {
+                string sourceChecksum = ChecksumCalculator.CalculateMD5Checksum(sourceFilePath);
+                string replicaChecksum = ChecksumCalculator.CalculateMD5Checksum(replicaFilePath);
+
+                return sourceChecksum != replicaChecksum;
+            }
         }
-
-        // static void LogAction(string logFilePath, string message)
-        // {
-        //     try 
-        //     {
-        //         // Console.WriteLine("logFilePath: " + logFilePath);
-
-        //         string formattedMessage = $"{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} - {message}";
-
-        //         string logFileName = $"log_{DateTime.Now:yyyyMMddHHmmss}.txt";
-        //         // string logFilePath = Path.Combine(logFilePath);
-
-        //         Console.WriteLine($"Logged: {formattedMessage}");
-
-        //         using (StreamWriter writer = new StreamWriter(logFilePath, true))
-        //         {
-        //             writer.WriteLine(formattedMessage);
-        //         }
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         Console.WriteLine($"Error while logging: {ex.Message}");
-        //     }
-        // }
-
-
-
     }
 
     public class Logger
@@ -228,6 +202,21 @@ namespace lilsync
             }
 
             System.Console.WriteLine(formattedMessage);
+        }
+    }
+
+    public static class ChecksumCalculator
+    {
+        public static string CalculateMD5Checksum(string filePath)
+        {
+            using (var md5 = MD5.Create())
+            {
+                using (var stream = File.OpenRead(filePath))
+                {
+                    byte[] hash = md5.ComputeHash(stream);
+                    return BitConverter.ToString(hash).Replace("-", "").ToLower();
+                }
+            }
         }
     }
 
