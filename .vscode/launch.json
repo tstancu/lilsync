@@ -12,10 +12,10 @@
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/bin/Debug/net7.0/lilsync.dll",
             "args": [
-                "/home/ts/Projects/CSharp/test_source", 
-                "/home/ts/Projects/CSharp/test_replica", 
-                "/home/ts/Projects/CSharp/lilsync/Logs/lilsync.log",
-                "3"
+                "C:\\Projects\\CSharp\\test_source", 
+                "C:\\Projects\\CSharp\\test_replica", 
+                "C:\\Projects\\CSharp\\Logs\\lilsync.txt",
+                "10"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
@@ -26,28 +26,6 @@
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach"
-        },
-        {
-            // Use IntelliSense to find out which attributes exist for C# debugging
-            // Use hover for the description of the existing attributes
-            // For further information visit https://github.com/dotnet/vscode-csharp/blob/main/debugger-launchjson.md
-            "name": "Run Program with Cleanup",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build",
-            // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/bin/Debug/net7.0/lilsync.dll",
-            "args": [
-                "/home/ts/Projects/CSharp/test_source", 
-                "/home/ts/Projects/CSharp/test_replica", 
-                "/home/ts/Projects/CSharp/lilsync/Logs/lilsync.log",
-                "3", 
-                "--cleanup"
-            ],
-            "cwd": "${workspaceFolder}",
-            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
-            "console": "internalConsole",
-            "stopAtEntry": false
         }
     ]
 }

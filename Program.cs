@@ -44,6 +44,10 @@ namespace lilsync
 
             if (args.Contains("--cleanup"))
             {
+                // Gracefully stop the synchronization timer, if it's running.
+                synchronizationTimer?.Stop();
+                synchronizationTimer?.Dispose();
+
                 Cleanup(sourceFolder, replicaFolder, logFilePath);
                 Console.WriteLine("Cleanup completed successfully.");
             }
@@ -56,6 +60,10 @@ namespace lilsync
 
                 System.Console.WriteLine($"Synchronization will occur every {syncIntervalInSeconds} seconds. Please Enter to exit.");
                 Console.ReadLine();
+
+                // // Gracefully stop the synchronization timer when the application exits.
+                synchronizationTimer?.Stop();
+                synchronizationTimer?.Dispose();
             }
         }
 
@@ -63,10 +71,13 @@ namespace lilsync
         {
             string[] sourceFiles = Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories);
             string[] replicaFiles = Directory.GetFiles(replicaFolder, "*", SearchOption.AllDirectories);
+            string[] sourceDirectories = Directory.GetDirectories(sourceFolder, "*", SearchOption.AllDirectories);
 
             Logger logger = Logger.Instance(logFilePath);
 
-            HashSet<string> synchronizedReplicaFiles = new HashSet<string>();
+            var synchronizedReplicaFiles = new HashSet<string>();
+            var synchronizedDirectories = new HashSet<string>();
+            
 
             foreach (string sourceFile in sourceFiles)
             {
@@ -76,7 +87,6 @@ namespace lilsync
                 FileInfo sourceFileInfo = new FileInfo(sourceFile);
 
                 logger.Log($"Checking: {relativePath}");
-
 
                 // Check if the file exists in the replica
 
@@ -125,7 +135,19 @@ namespace lilsync
                 synchronizedReplicaFiles.Add(replicaFile);
             }
 
+            foreach (string sourceDirectory in sourceDirectories)
+            {
+                string relativePath = sourceDirectory.Substring(sourceFolder.Length);
+                string replicaDirectory = Path.GetFullPath(replicaFolder + relativePath);
 
+                if (!Directory.Exists(replicaDirectory))
+                {
+                    Directory.CreateDirectory(replicaDirectory);
+                    logger.Log($"Created missing directory: {relativePath}");
+                }
+
+                synchronizedDirectories.Add(replicaDirectory);
+            }
 
             // check and delete files in the replica that are not present in the source folder
 
@@ -133,18 +155,31 @@ namespace lilsync
             {
                 if (!synchronizedReplicaFiles.Contains(replicaFile))
                 {
-                    try
+                    if (File.Exists(replicaFile))
                     {
-                        File.Delete(replicaFile);
-                        logger.Log($"Deleted: {replicaFile.Substring(replicaFolder.Length)}");
+                        try
+                        {
+                            File.Delete(replicaFile);
+                            logger.Log($"Deleted: {replicaFile.Substring(replicaFolder.Length)}");
 
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.Log($"Error deleting {replicaFile}: {ex.Message}");
+                            // Delete parent directories if no other files/directories are present
+                            // string parentDirectory = Path.GetDirectoryName(replicaFile)!;
+                            // while (!string.Equals(parentDirectory, replicaFolder, StringComparison.OrdinalIgnoreCase) && Directory.Exists(parentDirectory) && Directory.GetFileSystemEntries(parentDirectory).Length == 0)
+                            // {
+                            //     Directory.Delete(parentDirectory);
+                            //     parentDirectory = Path.GetDirectoryName(parentDirectory)!;
+                            // }
+
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Log($"Error deleting {replicaFile}: {ex.Message}");
+                        }
                     }
                 }
             }
+
+            RemoveEmptyDirectories(replicaFolder, synchronizedDirectories, logger);
 
             static bool IsFileModified(string sourceFilePath, string replicaFilePath)
             {
@@ -152,6 +187,27 @@ namespace lilsync
                 string replicaChecksum = Utils.CalculateMD5Checksum(replicaFilePath);
 
                 return sourceChecksum != replicaChecksum;
+            }
+
+            static void RemoveEmptyDirectories(string baseFolder, HashSet<string> synchronizedDirectories, Logger logger)
+            {
+                var allDirectories = Directory.GetDirectories(baseFolder, "*", SearchOption.AllDirectories).OrderByDescending(dir => dir.Length);
+
+                foreach (string directory in allDirectories)
+                {
+                    if (!Directory.GetFileSystemEntries(directory).Any() && !synchronizedDirectories.Contains(directory))
+                    {
+                        try
+                        {
+                            Directory.Delete(directory);
+                            logger.Log($"Deleted empty directory: {directory}");
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Log($"Error deleting directory {directory}: {ex.Message}");
+                        }
+                    }
+                }
             }
         }
 
@@ -205,40 +261,6 @@ namespace lilsync
             else 
             {
                 Console.WriteLine($"{logFilePath} does not exist.");
-            }
-
-            // Cleanup build artifacts
-
-            var assemblyLocation = Assembly.GetExecutingAssembly()?.Location;
-
-            if (assemblyLocation != null)
-            {
-                var programFolder = Path.GetDirectoryName(assemblyLocation);
-
-                #pragma warning disable CS8604
-                var binFolder = Path.Combine(programFolder, "../../../bin");
-                var objFolder = Path.Combine(programFolder, "../../../obj");
-                #pragma warning restore CS8604
-
-                if (Directory.Exists(binFolder))
-                {
-                    Directory.Delete(binFolder, true);
-                    Console.WriteLine($"Bin folder deleted");
-                }
-                else
-                {
-                    Console.WriteLine($"{binFolder} does not exist.");
-                }
-
-                if (Directory.Exists(objFolder))
-                {
-                    Directory.Delete(objFolder, true);
-                    Console.WriteLine($"Obj folder deleted");
-                }
-                else
-                {
-                    Console.WriteLine($"{objFolder} does not exist.");
-                }
             }
         }
     }
