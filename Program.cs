@@ -6,18 +6,17 @@ using System.Security.Cryptography;
 using System.Reflection;
 using System.Timers;
 
+using System.Threading;
+
 
 namespace lilsync 
 {
-    class Program
+    public class Program
     {
-        private static Timer? synchronizationTimer;
+        private static System.Timers.Timer? synchronizationTimer;
         private static string sourceFolder = null!;
         private static string replicaFolder = null!;
         private static string logFilePath = null!;
-
-
-
         static void Main(string[] args)
         {
             if (args.Length != 4 && !args.Contains("--cleanup"))
@@ -53,7 +52,7 @@ namespace lilsync
             }
             else
             {
-                synchronizationTimer = new Timer(syncIntervalInSeconds * 1000);
+                synchronizationTimer = new System.Timers.Timer(syncIntervalInSeconds * 1000);
                 synchronizationTimer.Elapsed += new ElapsedEventHandler(SynchronizeFolderCallback);
                 synchronizationTimer.AutoReset = true;
                 synchronizationTimer.Enabled = true;
@@ -67,7 +66,7 @@ namespace lilsync
             }
         }
 
-        static void SynchronizeFolders(string sourceFolder, string replicaFolder, string logFilePath)
+        public static void SynchronizeFolders(string sourceFolder, string replicaFolder, string logFilePath)
         {
             string[] sourceFiles = Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories);
             string[] replicaFiles = Directory.GetFiles(replicaFolder, "*", SearchOption.AllDirectories);
@@ -161,15 +160,6 @@ namespace lilsync
                         {
                             File.Delete(replicaFile);
                             logger.Log($"Deleted: {replicaFile.Substring(replicaFolder.Length)}");
-
-                            // Delete parent directories if no other files/directories are present
-                            // string parentDirectory = Path.GetDirectoryName(replicaFile)!;
-                            // while (!string.Equals(parentDirectory, replicaFolder, StringComparison.OrdinalIgnoreCase) && Directory.Exists(parentDirectory) && Directory.GetFileSystemEntries(parentDirectory).Length == 0)
-                            // {
-                            //     Directory.Delete(parentDirectory);
-                            //     parentDirectory = Path.GetDirectoryName(parentDirectory)!;
-                            // }
-
                         }
                         catch (Exception ex)
                         {
@@ -302,7 +292,6 @@ namespace lilsync
             {
                 lock(lockObject)
                 {
-                    // using (FileStream fileStream = new FileStream(logFilePath, FileMode.Create, FileAccess.Write, FileShare.Read))
                     using (StreamWriter writer = File.CreateText(logFilePath))
                     {
                         // initialize the log file with headers or metadata
