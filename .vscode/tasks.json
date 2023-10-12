@@ -48,22 +48,6 @@
                 "${workspaceFolder}/lilsync.csproj"
             ],
             "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "cleanup",
-            "command": "${workspaceFolder}/scripts/clean-replica.sh",
-            "type": "shell",
-            "args": [
-                "/home/ts/Projects/CSharp/test_source",
-                "/home/ts/Projects/CSharp/test_replica",
-                "/home/ts/Projects/CSharp/lilsync/Logs"
-                ],
-            "problemMatcher": []
-        },
-        {
-            "label": "Custom task",
-            "command": "echo hello",
-            "type": "shell",
         }
     ]
 }

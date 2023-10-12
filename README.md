@@ -4,17 +4,19 @@
 
 Usage: 
 
-*run the app
-`lilSync <sourceFolder> <replicaFolder> <logFilePath> <syncIntervalInSeconds>`
+*run the app\
+`lilSync <sourceFolder> <replicaFolder> <logFilePath> <syncIntervalInSeconds>`\
+\
+*delete replica and log folders/file\
+`lilSync <sourceFolder> <replicaFolder> <logFilePath> <syncIntervalInSeconds> --cleanup`\
+\
+*clean build artifacts\
+`dotnet clean lilsyncSolution.sln`\
+\
 
-*delete replica and log folders/file
-`lilSync <sourceFolder> <replicaFolder> <logFilePath> <syncIntervalInSeconds> --cleanup`
+*build solution\
+`dotnet build lilsyncSolution.sln`\
+\
 
-*clean build artifacts
-`dotnet clean lilsyncSolution.sln`
-
-*build solution
-`dotnet build lilsyncSolution.sln`
-
-*test solution
-`dotnet test lilsyncSolution.sln`
+*test solution\
+`dotnet test lilsyncSolution.sln`\
